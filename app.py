@@ -177,16 +177,22 @@ with tab2:
             response().download(keyword, count)
 
         # Upload to S3 + collect info
+        # Upload to S3 + collect info
         upload_info = []
         for foldername, _, filenames in os.walk("simple_images"):
             for filename in filenames:
                 filepath = os.path.join(foldername, filename)
                 keyword_folder = os.path.basename(foldername)
-                s3_key = f"{s3_prefix}{keyword_folder}/{filename}"
+        
+                # Replace spaces with underscores
+                folder_safe = keyword_folder.replace(" ", "_")
+                file_safe = filename.replace(" ", "_")
+                s3_key = f"{s3_prefix}{folder_safe}/{file_safe}"
+        
                 try:
                     s3.upload_file(filepath, bucket_name, s3_key)
                     cdn_url = f"{cdn_base_url}{s3_key}"
-                    upload_info.append([keyword_folder, filename, cdn_url])
+                    upload_info.append([folder_safe, file_safe, cdn_url])
                 except Exception as e:
                     st.error(f"❌ Upload failed for {filename}: {str(e)}")
 
