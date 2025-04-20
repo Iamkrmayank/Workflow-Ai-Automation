@@ -1,3 +1,4 @@
+# ================== 📘 Page Setup - MUST BE FIRST ==================
 import streamlit as st
 st.set_page_config(page_title="🛠️ Multi-Utility Scraper", layout="wide")
 
@@ -21,6 +22,10 @@ import re
 import random
 import string
 from datetime import datetime, timezone
+import boto3
+
+# ================== 📘 Tab Setup ==================
+tab1, tab2, tab3, tab4 = st.tabs(["📄 Quote Scraper", "🖼️ Bulk Image Downloader", "🧰 CDN Image Transformer", "📘 Metadata Generator"])
 
 # ================== 📘 Tab Setup ==================
 tab1, tab2, tab3, tab4 = st.tabs(["📄 Quote Scraper", "🖼️ Bulk Image Downloader", "🧰 CDN Image Transformer", "📄 Meta Data Downloader"])
