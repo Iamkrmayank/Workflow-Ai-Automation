@@ -23,7 +23,14 @@ import random
 import string
 from datetime import datetime, timezone
 import boto3
-
+import streamlit as st
+import re
+import random
+import string
+from datetime import datetime, timezone
+import pandas as pd
+import io
+    
 # ================== 📘 Tab Setup ==================
 tab1, tab2, tab3, tab4 = st.tabs(["📄 Quote Scraper", "🖼️ Bulk Image Downloader", "🧰 CDN Image Transformer", "📄 Meta Data Downloader"])
 
@@ -245,14 +252,6 @@ with tab4:
     st.title("📘 Suvichaar Story Metadata Generator")
 
     # 🔧 Static metadata (common across all rows except user)
-    import streamlit as st
-    import re
-    import random
-    import string
-    from datetime import datetime, timezone
-    import pandas as pd
-    import io
-    
     # ================== 🔧 Utility Functions ==================
     def canurl(title):
         if not title or not isinstance(title, str):
