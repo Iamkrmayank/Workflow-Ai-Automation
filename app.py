@@ -25,9 +25,6 @@ from datetime import datetime, timezone
 import boto3
 
 # ================== 📘 Tab Setup ==================
-tab1, tab2, tab3, tab4 = st.tabs(["📄 Quote Scraper", "🖼️ Bulk Image Downloader", "🧰 CDN Image Transformer", "📘 Metadata Generator"])
-
-# ================== 📘 Tab Setup ==================
 tab1, tab2, tab3, tab4 = st.tabs(["📄 Quote Scraper", "🖼️ Bulk Image Downloader", "🧰 CDN Image Transformer", "📄 Meta Data Downloader"])
 
 # ================== 📄 QuoteFancy Scraper ==================
