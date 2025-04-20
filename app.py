@@ -1,4 +1,3 @@
-# ================== 📘 Page Setup - MUST BE FIRST ==================
 import streamlit as st
 st.set_page_config(page_title="🛠️ Multi-Utility Scraper", layout="wide")
 
