@@ -244,9 +244,38 @@ with tab4:
     st.title("📘 Suvichaar Story Metadata Generator")
 
     # 🔧 Static metadata (common across all rows except user)
+    import streamlit as st
+    import re
+    import random
+    import string
+    from datetime import datetime, timezone
+    import pandas as pd
+    import io
+    
+    # ================== 🔧 Utility Functions ==================
+    def canurl(title):
+        if not title or not isinstance(title, str):
+            raise ValueError("Invalid title: Title must be a non-empty string.")
+        slug = re.sub(r'[^a-z0-9-]', '', re.sub(r'\s+', '-', title.lower())).strip('-')
+        alphabet = string.ascii_letters + string.digits + "_-"
+        nano_id = ''.join(random.choices(alphabet, k=10)) + "_G"
+        slug_nano = f"{slug}_{nano_id}"
+        return [nano_id, slug_nano,
+                f"https://suvichaar.org/stories/{slug_nano}",
+                f"https://stories.suvichaar.org/{slug_nano}.html"]
+    
+    def generate_iso_time():
+        now = datetime.now(timezone.utc)
+        return now.strftime('%Y-%m-%dT%H:%M:%S+00:00')
+    
+    # ================== 📘 App Setup ==================
+    st.set_page_config(page_title="📘 Story Metadata Generator", layout="centered")
+    st.title("📘 Suvichaar Story Metadata Generator")
+    st.markdown("Generate structured metadata for your story titles and download as CSV or Excel.")
+    
+    # ================== 🧱 Static Metadata ==================
     static_metadata = {
         "lang": "en-US",
-        "userprofileurl": "https://www.instagram.com/iamkrmayank?igsh=eW82NW1qbjh4OXY2&utm_source=qr",
         "storygeneratorname": "Suvichaar Board",
         "contenttype": "Article",
         "storygeneratorversion": "1.0.0",
@@ -265,43 +294,38 @@ with tab4:
         "publisherlogoalt": "Suvichaarlogo",
         "person": "person"
     }
-
-    def canurl(title):
-        if not title or not isinstance(title, str):
-            raise ValueError("Invalid title: Title must be a non-empty string.")
-        slug = re.sub(r'[^a-z0-9-]', '', re.sub(r'\s+', '-', title.lower())).strip('-')
-        alphabet = string.ascii_letters + string.digits + "_-"
-        nano_id = ''.join(random.choices(alphabet, k=10)) + "_G"
-        slug_nano = f"{slug}_{nano_id}"
-        return [nano_id, slug_nano,
-                f"https://suvichaar.org/stories/{slug_nano}",
-                f"https://stories.suvichaar.org/{slug_nano}.html"]
-
-    def generate_iso_time():
-        now = datetime.now(timezone.utc)
-        return now.strftime('%Y-%m-%dT%H:%M:%S+00:00')
-
-    # === User Input ===
+    
+    # ================== 👥 User Profile Mapping ==================
+    user_profiles = {
+        "Mayank": "https://www.instagram.com/iamkrmayank?igsh=eW82NW1qbjh4OXY2&utm_source=qr",
+        "Sakshi": "https://www.instagram.com/sakshijain_",
+        "Onip": "https://www.instagram.com/onip.mathur/profilecard/?igsh=MW5zMm5qMXhybGNmdA==",
+        "Naman": "https://njnaman.in/"
+    }
+    
+    # ================== 📥 Input Section ==================
     storytitles_input = st.text_area("Enter comma-separated Story Titles", placeholder="E.g. Sunset Magic, AI-Powered Marketing")
     filename = st.text_input("Enter output filename (without extension)", value="story_metadata")
     file_format = st.selectbox("Choose output format", ["CSV (.csv)", "Excel (.xlsx)"])
-
+    
+    # ================== 🔄 Process and Export ==================
     if st.button("Generate Metadata"):
         if not storytitles_input.strip():
             st.warning("Please enter at least one story title.")
         else:
             storytitles = [title.strip() for title in storytitles_input.split(',') if title.strip()]
             data_rows = []
-
+    
             for storytitle in storytitles:
                 uuid, urlslug, canurl_val, canurl1_val = canurl(storytitle)
                 published_time = generate_iso_time()
                 modified_time = generate_iso_time()
                 pagetitle = f"{storytitle} | Suvichaar"
-
-                # Generate dynamic user per row
-                random_user = random.choice(["Mayank", "Onip", "Naman", "Sakshi"])
-
+    
+                # Select user and profile
+                random_user = random.choice(list(user_profiles.keys()))
+                random_profile_url = user_profiles[random_user]
+    
                 row_data = {
                     "storytitle": storytitle,
                     "pagetitle": pagetitle,
@@ -311,18 +335,19 @@ with tab4:
                     "canurl 1": canurl1_val,
                     "publishedtime": published_time,
                     "modifiedtime": modified_time,
-                    **static_metadata,
-                    "user": random_user
+                    "user": random_user,
+                    "userprofileurl": random_profile_url,
+                    **static_metadata
                 }
-
+    
                 data_rows.append(row_data)
-
+    
             df = pd.DataFrame(data_rows)
             st.success(f"✅ Metadata generated for {len(data_rows)} stories!")
             st.dataframe(df)
-
+    
             filename_clean = filename.strip() or "story_metadata"
-
+    
             if file_format.startswith("CSV"):
                 st.download_button(
                     label="📥 Download CSV",
@@ -330,14 +355,15 @@ with tab4:
                     file_name=f"{filename_clean}.csv",
                     mime="text/csv"
                 )
+    
             elif file_format.startswith("Excel"):
                 excel_buffer = io.BytesIO()
                 with pd.ExcelWriter(excel_buffer, engine='openpyxl') as writer:
                     df.to_excel(writer, index=False, sheet_name="Metadata")
+                excel_buffer.seek(0)
                 st.download_button(
                     label="📥 Download Excel",
                     data=excel_buffer,
                     file_name=f"{filename_clean}.xlsx",
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                 )
-
