@@ -20,7 +20,7 @@ import base64
 import shutil
 
 # ================== 📘 Tab Setup ==================
-tab1, tab2 , tab3 = st.tabs(["📄 Quote Scraper", " 🖼️ Bulk Image Downloader ", "🧰 CDN Image Transformer"])
+tab1, tab2 , tab3 , tab4 = st.tabs(["📄 Quote Scraper", " 🖼️ Bulk Image Downloader ", "🧰 CDN Image Transformer","📄 Meta Data Downloader"])
 # ================== 📄 QuoteFancy Scraper in tab1 ==================
 with tab1:
     st.title("📝 QuoteFancy Scraper")
@@ -282,3 +282,94 @@ with tab3:
 
             if error_rows:
                 st.warning(f"⚠️ Some rows had errors: {len(error_rows)}")
+        
+with tab4:
+    import re
+    import random
+    import string
+    from datetime import datetime, timezone
+    import pandas as pd
+    import io
+    
+    # ================== 🔧 Utility Functions ==================
+    def canurl(title):
+        if not title or not isinstance(title, str):
+            raise ValueError("Invalid title: Title must be a non-empty string.")
+    
+        slug = re.sub(r'[^a-z0-9-]', '', re.sub(r'\s+', '-', title.lower())).strip('-')
+        alphabet = string.ascii_letters + string.digits + "_-"
+        nano_id = ''.join(random.choices(alphabet, k=10)) + "_G"
+        slug_nano = f"{slug}_{nano_id}"
+    
+        return [nano_id, slug_nano,
+                f"https://suvichaar.org/stories/{slug_nano}",
+                f"https://stories.suvichaar.org/{slug_nano}.html"]
+    
+    def generate_iso_time():
+        now = datetime.now(timezone.utc)
+        return now.strftime('%Y-%m-%dT%H:%M:%S+00:00')
+    
+    # ================== 🎯 Streamlit App ==================
+    st.set_page_config(page_title="📘 Story Metadata Generator", layout="centered")
+    st.title("📘 Suvichaar Story Metadata Generator")
+    st.markdown("Generate structured metadata for your story titles and download as CSV or Excel.")
+    
+    # --- Input Fields ---
+    storytitles_input = st.text_area("Enter comma-separated Story Titles", placeholder="E.g. Sunset Magic, AI-Powered Marketing")
+    filename = st.text_input("Enter output filename (without extension)", value="story_metadata")
+    file_format = st.selectbox("Choose output format", ["CSV (.csv)", "Excel (.xlsx)"])
+    
+    if st.button("Generate Metadata"):
+        if not storytitles_input.strip():
+            st.warning("Please enter at least one story title.")
+        else:
+            storytitles = [title.strip() for title in storytitles_input.split(',') if title.strip()]
+            data_rows = []
+    
+            for storytitle in storytitles:
+                uuid, urlslug, canurl_val, canurl1_val = canurl(storytitle)
+                published_time = generate_iso_time()
+                modified_time = generate_iso_time()
+                pagetitle = f"{storytitle} | Suvichaar"
+    
+                data_rows.append({
+                    "storytitle": storytitle,
+                    "pagetitle": pagetitle,
+                    "uuid": uuid,
+                    "urlslug": urlslug,
+                    "canurl": canurl_val,
+                    "canurl 1": canurl1_val,
+                    "publishedtime": published_time,
+                    "modifiedtime": modified_time
+                })
+    
+            df = pd.DataFrame(data_rows)
+            st.success(f"✅ Metadata generated for {len(data_rows)} stories!")
+    
+            # Display preview
+            st.dataframe(df)
+    
+            # Prepare file
+            filename_clean = filename.strip() or "story_metadata"
+    
+            if file_format.startswith("CSV"):
+                csv_buffer = io.StringIO()
+                df.to_csv(csv_buffer, index=False)
+                st.download_button(
+                    label="📥 Download CSV",
+                    data=csv_buffer.getvalue().encode("utf-8"),
+                    file_name=f"{filename_clean}.csv",
+                    mime="text/csv"
+                )
+    
+            elif file_format.startswith("Excel"):
+                excel_buffer = io.BytesIO()
+                with pd.ExcelWriter(excel_buffer, engine='openpyxl') as writer:
+                    df.to_excel(writer, index=False, sheet_name="Metadata")
+                excel_buffer.seek(0)
+                st.download_button(
+                    label="📥 Download Excel",
+                    data=excel_buffer,
+                    file_name=f"{filename_clean}.xlsx",
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                )
