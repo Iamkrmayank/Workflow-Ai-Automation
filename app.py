@@ -2,6 +2,10 @@
 # pip install streamlit simple_image_download requests beautifulsoup4 pandas
 
 # ================== 📋 Import ==================
+
+import streamlit as st
+st.set_page_config(page_title="🛠️ Multi-Utility Scraper", layout="wide")
+
 import streamlit as st
 import requests
 from requests.adapters import HTTPAdapter
@@ -20,7 +24,8 @@ import base64
 import shutil
 
 # ================== 📘 Tab Setup ==================
-tab1, tab2 , tab3 , tab4 = st.tabs(["📄 Quote Scraper", " 🖼️ Bulk Image Downloader ", "🧰 CDN Image Transformer","📄 Meta Data Downloader"])
+tab1, tab2, tab3, tab4 = st.tabs(["📄 Quote Scraper", "🖼️ Bulk Image Downloader", "🧰 CDN Image Transformer", "📄 Meta Data Downloader"])
+
 # ================== 📄 QuoteFancy Scraper in tab1 ==================
 with tab1:
     st.title("📝 QuoteFancy Scraper")
