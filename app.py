@@ -269,7 +269,6 @@ with tab4:
         return now.strftime('%Y-%m-%dT%H:%M:%S+00:00')
     
     # ================== 📘 App Setup ==================
-    st.title("📘 Suvichaar Story Metadata Generator")
     st.markdown("Generate structured metadata for your story titles and download as CSV or Excel.")
     
     # ================== 🧱 Static Metadata ==================
