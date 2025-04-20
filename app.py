@@ -243,6 +243,29 @@ with tab3:
 with tab4:
     st.title("📘 Suvichaar Story Metadata Generator")
 
+    # 🔧 Static metadata (common across all rows except user)
+    static_metadata = {
+        "lang": "en-US",
+        "userprofileurl": "https://www.instagram.com/iamkrmayank?igsh=eW82NW1qbjh4OXY2&utm_source=qr",
+        "storygeneratorname": "Suvichaar Board",
+        "contenttype": "Article",
+        "storygeneratorversion": "1.0.0",
+        "sitename": "Suvichaar",
+        "generatorplatform": "Suvichaar",
+        "sitelogo96x96": "https://media.suvichaar.org/filters:resize/96x96/media/brandasset/suvichaariconblack.png",
+        "sitelogo32x32": "https://media.suvichaar.org/filters:resize/32x32/media/brandasset/suvichaariconblack.png",
+        "sitelogo192x192": "https://media.suvichaar.org/filters:resize/192x192/media/brandasset/suvichaariconblack.png",
+        "sitelogo144x144": "https://media.suvichaar.org/filters:resize/144x144/media/brandasset/suvichaariconblack.png",
+        "sitelogo92x92": "https://media.suvichaar.org/filters:resize/92x92/media/brandasset/suvichaariconblack.png",
+        "sitelogo180x180": "https://media.suvichaar.org/filters:resize/180x180/media/brandasset/suvichaariconblack.png",
+        "publisher": "Suvichaar",
+        "publisherlogosrc": "https://media.suvichaar.org/media/brandasset/suvichaariconblack.png",
+        "gtagid": "G-2D5GXVRK1E",
+        "organization": "Suvichaar",
+        "publisherlogoalt": "Suvichaarlogo",
+        "person": "person"
+    }
+
     def canurl(title):
         if not title or not isinstance(title, str):
             raise ValueError("Invalid title: Title must be a non-empty string.")
@@ -258,6 +281,7 @@ with tab4:
         now = datetime.now(timezone.utc)
         return now.strftime('%Y-%m-%dT%H:%M:%S+00:00')
 
+    # === User Input ===
     storytitles_input = st.text_area("Enter comma-separated Story Titles", placeholder="E.g. Sunset Magic, AI-Powered Marketing")
     filename = st.text_input("Enter output filename (without extension)", value="story_metadata")
     file_format = st.selectbox("Choose output format", ["CSV (.csv)", "Excel (.xlsx)"])
@@ -274,7 +298,11 @@ with tab4:
                 published_time = generate_iso_time()
                 modified_time = generate_iso_time()
                 pagetitle = f"{storytitle} | Suvichaar"
-                data_rows.append({
+
+                # Generate dynamic user per row
+                random_user = random.choice(["Mayank", "Onip", "Naman", "Sakshi"])
+
+                row_data = {
                     "storytitle": storytitle,
                     "pagetitle": pagetitle,
                     "uuid": uuid,
@@ -282,8 +310,12 @@ with tab4:
                     "canurl": canurl_val,
                     "canurl 1": canurl1_val,
                     "publishedtime": published_time,
-                    "modifiedtime": modified_time
-                })
+                    "modifiedtime": modified_time,
+                    **static_metadata,
+                    "user": random_user
+                }
+
+                data_rows.append(row_data)
 
             df = pd.DataFrame(data_rows)
             st.success(f"✅ Metadata generated for {len(data_rows)} stories!")
@@ -298,7 +330,6 @@ with tab4:
                     file_name=f"{filename_clean}.csv",
                     mime="text/csv"
                 )
-
             elif file_format.startswith("Excel"):
                 excel_buffer = io.BytesIO()
                 with pd.ExcelWriter(excel_buffer, engine='openpyxl') as writer:
@@ -309,3 +340,4 @@ with tab4:
                     file_name=f"{filename_clean}.xlsx",
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                 )
+
