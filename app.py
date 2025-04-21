@@ -32,7 +32,7 @@ import pandas as pd
 import io
     
 # ================== 📘 Tab Setup ==================
-tab1, tab2, tab3, tab4 ,tab5 = st.tabs(["📄 Quote Scraper", "🖼️ Bulk Image Downloader", "🧰 CDN Image Transformer", "📄 Meta Data Downloader","📜 Quote Structurer"])
+tab1, tab2, tab3, tab4 , tab5 = st.tabs(["📄 Quote Scraper", "🖼️ Bulk Image Downloader", "🧰 CDN Image Transformer", "📄 Meta Data Downloader","📜 Quote Structurer"])
 
 # ================== 📄 QuoteFancy Scraper ==================
 with tab1:
@@ -366,6 +366,7 @@ with tab4:
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                 )
 with tab5:
+    
     st.title("📜 Quote Structurer by Author")
     st.markdown("Upload a CSV containing `Quote` and `Author` columns. The app filters quotes ≤ 180 characters and structures them by author.")
     # File uploader
