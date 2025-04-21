@@ -32,7 +32,7 @@ import pandas as pd
 import io
     
 # ================== 📘 Tab Setup ==================
-tab1, tab2, tab3, tab4 = st.tabs(["📄 Quote Scraper", "🖼️ Bulk Image Downloader", "🧰 CDN Image Transformer", "📄 Meta Data Downloader"])
+tab1, tab2, tab3, tab4 ,tab5 = st.tabs(["📄 Quote Scraper", "🖼️ Bulk Image Downloader", "🧰 CDN Image Transformer", "📄 Meta Data Downloader","📜 Quote Structurer"])
 
 # ================== 📄 QuoteFancy Scraper ==================
 with tab1:
@@ -365,3 +365,44 @@ with tab4:
                     file_name=f"{filename_clean}.xlsx",
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                 )
+with tab5:
+    st.title("📜 Quote Structurer by Author")
+    st.markdown("Upload a CSV containing `Quote` and `Author` columns. The app filters quotes ≤ 180 characters and structures them by author.")
+    # File uploader
+    uploaded_file = st.file_uploader("Upload your CSV file", type=["csv"])
+    
+    if uploaded_file is not None:
+        try:
+            df = pd.read_csv(uploaded_file)
+    
+            # Validate required columns
+            if 'Quote' not in df.columns or 'Author' not in df.columns:
+                st.error("❌ CSV must contain 'Quote' and 'Author' columns.")
+            else:
+                # Filter quotes <= 180 characters
+                df = df[df['Quote'].apply(lambda x: isinstance(x, str) and len(x.strip()) <= 180)]
+    
+                result = []
+                for author, group in df.groupby('Author'):
+                    quotes = group['Quote'].dropna().tolist()[:8]
+                    quotes += ['NA'] * (8 - len(quotes))
+                    result.append(quotes + [author])
+    
+                # Create final DataFrame
+                columns = [f's{i}paragraph1' for i in range(2, 10)] + ['Author']
+                final_df = pd.DataFrame(result, columns=columns)
+    
+                st.success("✅ Successfully structured quotes!")
+                st.dataframe(final_df)
+    
+                # Prepare download
+                csv = final_df.to_csv(index=False).encode('utf-8')
+                st.download_button(
+                    label="📥 Download Structured CSV",
+                    data=csv,
+                    file_name='structured_quotes.csv',
+                    mime='text/csv',
+                )
+    
+        except Exception as e:
+            st.error(f"❌ Error reading the CSV file: {e}")
