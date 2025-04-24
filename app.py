@@ -184,8 +184,8 @@ with tab2:
             for filename in filenames:
                 filepath = os.path.join(foldername, filename)
                 keyword_folder = os.path.basename(foldername)
-                folder_safe = keyword_folder.replace(" ", "_")
-                file_safe = filename.replace(" ", "_")
+                folder_safe = keyword_folder.replace(" ", "-")
+                file_safe = filename.replace(" ", "-")
                 s3_key = f"{s3_prefix}{folder_safe}/{file_safe}"
 
                 try:
