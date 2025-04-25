@@ -155,7 +155,7 @@ with tab2:
     region_name = "ap-south-1"
     bucket_name = "suvichaarapp"
     s3_prefix = "media/"
-    cdn_base_url = "https://cdn.suvichaar.org/"
+    cdn_base_url = "https://media.suvichaar.org/"
 
     # Boto3 client setup
     import boto3
@@ -207,43 +207,61 @@ with tab2:
 with tab3:
     st.title("🧰 CDN Image Transformer from CSV")
     uploaded_file = st.file_uploader("📤 Upload CSV file with `CDN_URL` column", type="csv")
-
+    
+    # ===================== 📐 Resize Templates =====================
+    resize_templates = {
+        "potraightcoverresize": {"width": 640, "height": 853},
+        "landscapecoverresize": {"width": 853, "height": 640},
+        "squarecoverresize": {"width": 800, "height": 800},
+        "socialthumbnailcoverresize": {"width": 300, "height": 300},
+        "nextstoryimageresize": {"width": 315, "height": 315},
+        "standardurl": {"width": 720, "height": 1280},
+    }
+    
+    base_cdn_url = "https://media.suvichaar.org/"
+    
+    # ===================== 📄 File Handling =====================
     if uploaded_file:
         df = pd.read_csv(uploaded_file)
+    
         if "CDN_URL" not in df.columns:
             st.error("❌ The CSV must contain a column named `CDN_URL`.")
         else:
             st.success("✅ CSV Uploaded Successfully!")
-
-            transformed_urls = []
-            template = {
-                "bucket": "suvichaarapp",
-                "key": "keyValue",
-                "edits": {
-                    "resize": {
-                        "width": 720,
-                        "height": 1280,
-                        "fit": "cover"
-                    }
-                }
-            }
-
-            for _, row in df.iterrows():
-                media_url = row["CDN_URL"]
-                try:
-                    if not isinstance(media_url, str) or not media_url.startswith("https://media.suvichaar.org/"):
-                        raise ValueError("Invalid CDN URL")
-
-                    key_value = media_url.replace("https://media.suvichaar.org/", "")
-                    template["key"] = key_value
-                    encoded = base64.urlsafe_b64encode(json.dumps(template).encode()).decode()
-                    final_url = f"https://media.suvichaar.org/{encoded}"
-                    transformed_urls.append(final_url)
-
-                except Exception:
-                    transformed_urls.append("ERROR")
-
-            df["Transformed_CDN_URL"] = transformed_urls
+    
+            # ===================== 🔁 Generate URLs =====================
+            for name, size in resize_templates.items():
+                transformed_urls = []
+    
+                for _, row in df.iterrows():
+                    media_url = row["CDN_URL"]
+                    try:
+                        if not isinstance(media_url, str) or not media_url.startswith(base_cdn_url):
+                            raise ValueError("Invalid CDN URL")
+    
+                        key_value = media_url.replace(base_cdn_url, "")
+                        template = {
+                            "bucket": "suvichaarapp",
+                            "key": key_value,
+                            "edits": {
+                                "resize": {
+                                    "width": size["width"],
+                                    "height": size["height"],
+                                    "fit": "cover"
+                                }
+                            }
+                        }
+    
+                        encoded = base64.urlsafe_b64encode(json.dumps(template).encode()).decode()
+                        final_url = f"{base_cdn_url}{encoded}"
+                        transformed_urls.append(final_url)
+    
+                    except Exception:
+                        transformed_urls.append("ERROR")
+    
+                df[name] = transformed_urls
+    
+            # ===================== 📥 Download =====================
             st.dataframe(df.head())
             st.download_button("📥 Download Transformed CSV", data=df.to_csv(index=False), file_name="transformed_cdn_links.csv", mime="text/csv")
 
