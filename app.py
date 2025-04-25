@@ -205,10 +205,12 @@ with tab2:
 
 # ================== 🧰 CDN Image Transformer ==================
 with tab3:
+    
     st.title("🧰 CDN Image Transformer from CSV")
+    # ===================== 📤 Upload File =====================
     uploaded_file = st.file_uploader("📤 Upload CSV file with `CDN_URL` column", type="csv")
     
-    # ============== 📐 Resize Presets ==================
+    # ===================== 🧱 Resize Presets =====================
     resize_presets = {
         "potraightcoverresize": (640, 853),
         "landscapecoverresize": (853, 640),
@@ -221,7 +223,7 @@ with tab3:
     cdn_prefix_media = "https://media.suvichaar.org/"
     cdn_prefix_cdn = "https://cdn.suvichaar.org/"
     
-    # ============== 🚀 Main Logic ==================
+    # ===================== 🚀 Main Processing =====================
     if uploaded_file:
         df = pd.read_csv(uploaded_file)
     
@@ -230,7 +232,7 @@ with tab3:
         else:
             st.success("✅ CSV Uploaded Successfully!")
     
-            # Loop through each preset and generate URLs
+            # 🔁 Process each preset
             for preset_name, (width, height) in resize_presets.items():
                 transformed_urls = []
     
@@ -268,12 +270,21 @@ with tab3:
     
                 df[preset_name] = transformed_urls
     
-            # Show transformed results
+            # 📋 Preview DataFrame
             st.dataframe(df.head())
     
-            # Provide download button
+            # 💾 Generate timestamped filename
             csv_data = df.to_csv(index=False)
-            st.download_button("📥 Download Transformed CSV", data=csv_data, file_name="transformed_cdn_links.csv", mime="text/csv")
+            timestamp = int(time.time())
+            output_filename = f"transformed_cdn_links_{timestamp}.csv"
+    
+            # 📥 Download Button
+            st.download_button(
+                label="📥 Download Transformed CSV",
+                data=csv_data,
+                file_name=output_filename,
+                mime="text/csv"
+            )
     # ================== 📄 Meta Data Downloader ==================
 with tab4:
     st.title("📘 Suvichaar Story Metadata Generator")
