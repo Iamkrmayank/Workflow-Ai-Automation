@@ -218,7 +218,8 @@ with tab3:
         "standardurl": (720, 1280),
     }
     
-    base_cdn_prefix = "https://media.suvichaar.org/"
+    cdn_prefix_media = "https://media.suvichaar.org/"
+    cdn_prefix_cdn = "https://cdn.suvichaar.org/"
     
     # ============== 🚀 Main Logic ==================
     if uploaded_file:
@@ -229,17 +230,23 @@ with tab3:
         else:
             st.success("✅ CSV Uploaded Successfully!")
     
+            # Loop through each preset and generate URLs
             for preset_name, (width, height) in resize_presets.items():
-                encoded_urls = []
+                transformed_urls = []
     
-                for _, row in df.iterrows():
-                    media_url = row["CDN_URL"]
+                for url in df["CDN_URL"]:
                     try:
-                        if not isinstance(media_url, str) or not media_url.startswith(base_cdn_prefix):
+                        if not isinstance(url, str):
+                            raise ValueError("Invalid URL")
+    
+                        # Normalize to media prefix
+                        if url.startswith(cdn_prefix_cdn):
+                            url = url.replace(cdn_prefix_cdn, cdn_prefix_media)
+    
+                        if not url.startswith(cdn_prefix_media):
                             raise ValueError("Invalid CDN URL")
     
-                        key_value = media_url.replace(base_cdn_prefix, "")
-    
+                        key_value = url.replace(cdn_prefix_media, "")
                         template = {
                             "bucket": "suvichaarapp",
                             "key": key_value,
@@ -253,18 +260,20 @@ with tab3:
                         }
     
                         encoded = base64.urlsafe_b64encode(json.dumps(template).encode()).decode()
-                        final_url = f"{base_cdn_prefix}{encoded}"
-                        encoded_urls.append(final_url)
+                        final_url = f"{cdn_prefix_media}{encoded}"
+                        transformed_urls.append(final_url)
     
-                    except Exception as e:
-                        encoded_urls.append("ERROR")
+                    except Exception:
+                        transformed_urls.append("ERROR")
     
-                # Save in respective column
-                df[preset_name] = encoded_urls
+                df[preset_name] = transformed_urls
     
-            # Show and allow download
+            # Show transformed results
             st.dataframe(df.head())
-            st.download_button("📥 Download Transformed CSV", data=df.to_csv(index=False), file_name="transformed_cdn_links.csv", mime="text/csv")
+    
+            # Provide download button
+            csv_data = df.to_csv(index=False)
+            st.download_button("📥 Download Transformed CSV", data=csv_data, file_name="transformed_cdn_links.csv", mime="text/csv")
     # ================== 📄 Meta Data Downloader ==================
 with tab4:
     st.title("📘 Suvichaar Story Metadata Generator")
