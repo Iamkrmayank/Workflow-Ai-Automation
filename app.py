@@ -208,19 +208,19 @@ with tab3:
     st.title("🧰 CDN Image Transformer from CSV")
     uploaded_file = st.file_uploader("📤 Upload CSV file with `CDN_URL` column", type="csv")
     
-    # ===================== 📐 Resize Templates =====================
-    resize_templates = {
-        "potraightcoverresize": {"width": 640, "height": 853},
-        "landscapecoverresize": {"width": 853, "height": 640},
-        "squarecoverresize": {"width": 800, "height": 800},
-        "socialthumbnailcoverresize": {"width": 300, "height": 300},
-        "nextstoryimageresize": {"width": 315, "height": 315},
-        "standardurl": {"width": 720, "height": 1280},
+    # ============== 📐 Resize Presets ==================
+    resize_presets = {
+        "potraightcoverresize": (640, 853),
+        "landscapecoverresize": (853, 640),
+        "squarecoverresize": (800, 800),
+        "socialthumbnailcoverresize": (300, 300),
+        "nextstoryimageresize": (315, 315),
+        "standardurl": (720, 1280),
     }
     
-    base_cdn_url = "https://media.suvichaar.org/"
+    base_cdn_prefix = "https://media.suvichaar.org/"
     
-    # ===================== 📄 File Handling =====================
+    # ============== 🚀 Main Logic ==================
     if uploaded_file:
         df = pd.read_csv(uploaded_file)
     
@@ -229,43 +229,43 @@ with tab3:
         else:
             st.success("✅ CSV Uploaded Successfully!")
     
-            # ===================== 🔁 Generate URLs =====================
-            for name, size in resize_templates.items():
-                transformed_urls = []
+            for preset_name, (width, height) in resize_presets.items():
+                encoded_urls = []
     
                 for _, row in df.iterrows():
                     media_url = row["CDN_URL"]
                     try:
-                        if not isinstance(media_url, str) or not media_url.startswith(base_cdn_url):
+                        if not isinstance(media_url, str) or not media_url.startswith(base_cdn_prefix):
                             raise ValueError("Invalid CDN URL")
     
-                        key_value = media_url.replace(base_cdn_url, "")
+                        key_value = media_url.replace(base_cdn_prefix, "")
+    
                         template = {
                             "bucket": "suvichaarapp",
                             "key": key_value,
                             "edits": {
                                 "resize": {
-                                    "width": size["width"],
-                                    "height": size["height"],
+                                    "width": width,
+                                    "height": height,
                                     "fit": "cover"
                                 }
                             }
                         }
     
                         encoded = base64.urlsafe_b64encode(json.dumps(template).encode()).decode()
-                        final_url = f"{base_cdn_url}{encoded}"
-                        transformed_urls.append(final_url)
+                        final_url = f"{base_cdn_prefix}{encoded}"
+                        encoded_urls.append(final_url)
     
-                    except Exception:
-                        transformed_urls.append("ERROR")
+                    except Exception as e:
+                        encoded_urls.append("ERROR")
     
-                df[name] = transformed_urls
+                # Save in respective column
+                df[preset_name] = encoded_urls
     
-            # ===================== 📥 Download =====================
+            # Show and allow download
             st.dataframe(df.head())
             st.download_button("📥 Download Transformed CSV", data=df.to_csv(index=False), file_name="transformed_cdn_links.csv", mime="text/csv")
-
-# ================== 📄 Meta Data Downloader ==================
+    # ================== 📄 Meta Data Downloader ==================
 with tab4:
     st.title("📘 Suvichaar Story Metadata Generator")
 
